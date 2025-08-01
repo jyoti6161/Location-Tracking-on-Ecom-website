@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DineDash - Delicious Food Delivered Fast</title>
+
+  <!-- ✅ Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- ✅ Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+
+  <!-- ✅ Swiper Carousel -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+  <!-- ✅ AOS (Animate on Scroll) -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: #f9fafb; }
+    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+    .hover-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .hover-card:hover { transform: translateY(-6px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+    .btn-primary {
+      background: linear-gradient(45deg, #ff4b2b, #ff416c);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(45deg, #ff416c, #ff4b2b);
+    }
+   .gradient-heading {
+    color: #ff4b2b; /* fallback */
+    background: linear-gradient(45deg, #ff4b2b, #ff7e5f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    }
+
+    #scrollTopBtn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #ff4b2b;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 50%;
+      display: none;
+      transition: 0.3s;
+    }
+  </style>
+</head>
+<body class="text-gray-800">
+
+  <!-- ✅ Navbar -->
+  <nav id="mainNavbar" class="fixed top-0 left-0 w-full z-50 bg-white/70 backdrop-blur-md shadow-md transition-all duration-300">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+
+      <!-- Brand -->
+      <div class="flex items-center space-x-3">
+        <img src="/static/images/logo.png" class="w-30 h-20 rounded-full">
+        <h2 class="text-2xl font-bold text-red-800">DineDash</h2>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="hidden md:flex items-center bg-gray-100 px-4 py-2 rounded-lg w-[40%]">
+        <input type="text" placeholder="Search for restaurants or dishes..." class="bg-transparent flex-grow outline-none">
+        <button class="text-red-500 font-semibold">🔍</button>
+      </div>
+     
+      
+
+
+
+
+      <!-- Nav Links -->
+      <div class="flex items-center space-x-6 font-medium">
+        <a href="#" class="hover:text-red-500">Offers</a>
+        <a href="#" class="hover:text-red-500">Help</a>
+        <a href="/myorders" class="hover:text-red-500">My Orders</a>
+        <a href="/login" class="btn-primary">Login</a>
+      </div>
+    </div>
+  </nav>
+  <div class="h-24"></div>
+
+  <!-- ✅ Hero Section -->
+  <section class="relative" data-aos="fade-up">
+    <img src="/static/images/hero_banner.jpg" class="w-full h-[450px] object-cover">
+    <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-center text-white">
+      <h2 class="text-5xl font-bold mb-4">Delicious Food Delivered Fast!</h2>
+      <p class="text-lg mb-6">Order from the best restaurants near you</p>
+
+      <!-- Search Box in Hero -->
+      <div class="bg-white rounded-xl shadow-lg flex items-center p-3 w-[80%] md:w-[50%]">
+        <input type="text" placeholder="Search for restaurant or cuisine..." class="flex-grow outline-none px-3 py-2 rounded-md text-black-700">
+        <button class="btn-primary">Search</button>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- ✅ Carousel for Special Offers -->
+  <section id="offers" class="container mx-auto px-6 py-12">
+    <h2 class="text-4xl font-bold gradient-heading mb-4 text-center" data-aos="fade-up"> Exclusive Offers</h2>
+    <p class="text-center text-gray-500 mb-6">Save big on your favorite meals</p>
+
+    <div class="swiper mySwiper rounded-xl shadow-lg overflow-hidden" data-aos="fade-up">
+      <div class="swiper-wrapper">
+        
+        <!-- ✅ Offer 1 -->
+        <div class="swiper-slide relative">
+          <img src="/static/images/offers/indian_offer.jpg" class="w-full h-[350px] object-cover">
+          <div class="absolute bottom-5 left-5 bg-black bg-opacity-50 text-white p-4 rounded-lg">
+            <h3 class="text-2xl font-bold">Flat 20% OFF</h3>
+            <p class="text-sm text-gray-200">On all Indian cuisines</p>
+          </div>
+        </div>
+
+        <!-- ✅ Offer 2 -->
+        <div class="swiper-slide relative">
+          <img src="/static/images/offers/italian_offer.jpg" class="w-full h-[350px] object-cover">
+          <div class="absolute bottom-5 left-5 bg-black bg-opacity-50 text-white p-4 rounded-lg">
+            <h3 class="text-2xl font-bold">Buy 1 Get 1 FREE</h3>
+            <p class="text-sm text-gray-200">On Italian pizzas & pastas</p>
+          </div>
+        </div>
+
+        <!-- ✅ Offer 3 -->
+        <div class="swiper-slide relative">
+          <img src="/static/images/offers/free_delivery.jpg" class="w-full h-[350px] object-cover">
+          <div class="absolute bottom-5 left-5 bg-black bg-opacity-50 text-white p-4 rounded-lg">
+            <h3 class="text-2xl font-bold">Free Delivery</h3>
+            <p class="text-sm text-gray-200">On orders above ₹500</p>
+          </div>
+        </div>
+
+      </div>
+      <!-- ✅ Swiper Pagination -->
+      <div class="swiper-pagination"></div>
+    </div>
+  </section>
+
+ 
+
+  <!-- ✅ Trending Restaurants -->
+  <section id="restaurants" class="container mx-auto px-6 pb-16">
+    <h2 class="text-4xl font-bold gradient-heading mb-4 text-center" data-aos="fade-up"> Trending Restaurants</h2>
+    <p class="text-center text-gray-500 mb-6">Handpicked top-rated restaurants near you</p>
+    <div id="restaurantGrid" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+  </section>
+
+<!-- ✅ Premium Footer -->
+<footer class="bg-gray-900 text-white mt-16">
+  <!-- ✅ Top Footer Content -->
+  <div class="container mx-auto px-6 py-12 grid md:grid-cols-4 gap-10">
+    
+    <!-- Brand Section -->
+    <div>
+      <h3 class="text-2xl font-bold text-red-400">🍽 DineDash</h3>
+      <p class="text-gray-400 mt-3 leading-relaxed">
+        Delicious food delivered fast, from the best restaurants around you. 
+        Discover cuisines you love & exclusive offers every day.
+      </p>
+    </div>
+
+    <!-- Quick Links -->
+    <div>
+      <h4 class="text-lg font-semibold border-b border-gray-700 pb-2">Quick Links</h4>
+      <ul class="mt-3 space-y-2 text-gray-400">
+        <li><a href="#" class="hover:text-red-400">Offers & Deals</a></li>
+        <li><a href="#" class="hover:text-red-400">Help & Support</a></li>
+        <li><a href="/myorders" class="hover:text-red-400">Track My Orders</a></li>
+        <li><a href="#" class="hover:text-red-400">About Us</a></li>
+      </ul>
+    </div>
+
+    <!-- Contact -->
+    <div>
+      <h4 class="text-lg font-semibold border-b border-gray-700 pb-2">Contact Us</h4>
+      <ul class="mt-3 space-y-2 text-gray-400">
+        <li>📞 +91 98765 43210</li>
+        <li>✉ support@dinedash.com</li>
+        <li>📍 Mumbai, India</li>
+      </ul>
+    </div>
+
+    <!-- Social Media -->
+    <div>
+      <h4 class="text-lg font-semibold border-b border-gray-700 pb-2">Follow Us</h4>
+      <div class="flex space-x-4 mt-4">
+        <a href="#" class="w-10 h-10 flex items-center justify-center bg-gray-800 rounded-full hover:bg-red-500 transition">
+          <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="FB" class="w-5">
+        </a>
+        <a href="#" class="w-10 h-10 flex items-center justify-center bg-gray-800 rounded-full hover:bg-pink-500 transition">
+          <img src="https://cdn-icons-png.flaticon.com/512/1384/1384063.png" alt="IG" class="w-5">
+        </a>
+        <a href="#" class="w-10 h-10 flex items-center justify-center bg-gray-800 rounded-full hover:bg-blue-400 transition">
+          <img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="Twitter" class="w-5">
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Bottom Bar -->
+  <div class="border-t border-gray-800 py-4 text-center text-gray-500 text-sm">
+    © 2025 <span class="text-red-400 font-semibold">DineDash</span>. All rights reserved.
+  </div>
+</footer>
+
+
+  <!-- ✅ Scroll-to-top button -->
+  <button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">⬆</button>
+
+  <!-- ✅ JS Section -->
+  <script>
+    AOS.init(); // ✅ Scroll animations
+
+    // ✅ Navbar scroll effect
+    const navbar = document.getElementById("mainNavbar");
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 50) {
+        navbar.classList.remove("bg-white/70", "py-4");
+        navbar.classList.add("bg-white", "py-3", "shadow-md");
+      } else {
+        navbar.classList.remove("bg-white", "py-3", "shadow-md");
+        navbar.classList.add("bg-white/70", "py-4");
+      }
+
+      // Show scroll-to-top button
+      if (window.scrollY > 300) {
+        document.getElementById("scrollTopBtn").style.display = "block";
+      } else {
+        document.getElementById("scrollTopBtn").style.display = "none";
+      }
+    });
+
+    // ✅ Swiper Carousel
+    var swiper = new Swiper(".mySwiper", {
+      slidesPerView: 1,
+      spaceBetween: 0,
+      speed: 1500,
+      loop: true,
+      pagination: { el: ".swiper-pagination", clickable: true },
+      autoplay: { delay: 1000, disableOnInteraction: false },
+    });
+
+    // ✅ Load Restaurants Dynamically
+    let allRestaurants = [];
+    async function loadRestaurants() {
+      const res = await fetch("/restaurants/");
+      allRestaurants = await res.json();
+      displayRestaurants(allRestaurants);
+    }
+
+    function displayRestaurants(restaurants) {
+      const grid = document.getElementById("restaurantGrid");
+      grid.innerHTML = "";
+      restaurants.forEach(r => {
+        grid.innerHTML += `
+          <div class="hover-card bg-white rounded-lg shadow overflow-hidden" data-aos="fade-up">
+            <img src="${r.image_url}" class="w-full h-56 object-cover">
+            <div class="p-4">
+              <h3 class="text-xl font-bold">${r.name}</h3>
+              <p class="text-gray-600">${r.category} • ⭐ ${r.rating.toFixed(1)}</p>
+              <button onclick="window.location.href='/menu/${r.id}'" class="btn-primary mt-3 w-full">View Menu</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function filterCuisine(type) {
+      if (type === "all") {
+        displayRestaurants(allRestaurants);
+      } else {
+        displayRestaurants(allRestaurants.filter(r => r.category === type));
+      }
+    }
+
+    loadRestaurants();
+  </script>
+
+ <!-- ✅ Live Order Popup -->
+<div id="liveOrderPopup" class="hidden fixed bottom-6 right-6 bg-white shadow-xl p-4 rounded-xl border border-red-200 flex items-center space-x-3 z-50 transition-all duration-500 max-w-xs">
+  
+  <div class="flex flex-col">
+    <span id="liveOrderText" class="text-sm font-semibold text-gray-800"></span>
+    <span class="text-xs text-gray-500 mt-1">Just now 🔥</span>
+  </div>
+</div>
+
+<style>
+#liveOrderPopup.show {
+  display: flex !important;
+  animation: slideInRight 0.6s ease forwards;
+}
+@keyframes slideInRight {
+  0% { opacity: 0; transform: translateX(80px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+</style>
+
+<script>
+const sampleDishes = [
+  { name: "Paneer Butter Masala" },
+  { name: "Chicken Biryani"},
+  { name: "Margherita Pizza"},
+  { name: "Veg Manchurian" },
+  { name: "Tandoori Chicken" },
+  { name: "Pasta Alfredo"}
+];
+const sampleCities = [
+    "Andheri West","Bandra Kurla Complex","Lower Parel","Powai",
+    "Malad","Versova","Juhu","Borivali","Colaba","Fort",
+    "Marine Drive","Dadar","Goregaon","Kurla","Chembur"
+  ];
+const excitementEmojis = ["🔥","🎉","✨","🍴","😍","🤩","🍕","🥢"];
+
+function showLiveOrder() {
+  const dishObj = sampleDishes[Math.floor(Math.random() * sampleDishes.length)];
+  const city = sampleCities[Math.floor(Math.random() * sampleCities.length)];
+  const orders = Math.floor(Math.random() * 20) + 5;
+  const emoji = excitementEmojis[Math.floor(Math.random() * excitementEmojis.length)];
+
+  
+  document.getElementById("liveOrderText").innerHTML =
+    `${emoji} <b>${orders} people</b> just ordered <b>${dishObj.name}</b> in <b>${city}</b>`;
+
+  const popup = document.getElementById("liveOrderPopup");
+  popup.classList.add("show");
+  setTimeout(() => popup.classList.remove("show"), 4000);
+}
+
+setInterval(showLiveOrder, 8000);
+</script>
+
+
+
+
+</body>
+</html>

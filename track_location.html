@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Live Delivery Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="bg-gray-50">
+  <div class="text-center py-6">
+    <h1 class="text-3xl font-bold text-red-500">🚴‍♂️ Tracking your Food Delivery</h1>
+  </div>
+  <div id="map" class="mx-auto" style="height: 500px; width: 90%;"></div>
+
+  <script>
+    const map = L.map('map').setView([19.0760, 72.8777], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    let riderMarker = null;
+
+    async function updateRider() {
+      const res = await fetch('/api/latest_location');
+      const data = await res.json();
+
+      const latLng = [data.latitude, data.longitude];
+      if (riderMarker) riderMarker.setLatLng(latLng);
+      else riderMarker = L.marker(latLng).addTo(map).bindPopup("Delivery Rider 🚴");
+      map.panTo(latLng);
+    }
+
+    setInterval(updateRider, 3000);
+  </script>
+</body>
+</html>

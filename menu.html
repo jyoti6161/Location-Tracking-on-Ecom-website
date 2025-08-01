@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Restaurant Menu - DineDash</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    .quantity-btn {
+      background: #f5f5f5;
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <!-- ✅ Navbar -->
+  <nav class="bg-white shadow fixed w-full z-50">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-red-500 cursor-pointer" onclick="window.location.href='/'">
+        🍽 DineDash
+      </h1>
+      <div class="flex items-center space-x-6">
+        <a href="/" class="hover:text-red-500">Home</a>
+        <a href="/myorders" class="hover:text-red-500">My Orders</a>
+        <button onclick="logout()" class="px-4 py-2 rounded bg-gray-700 text-white hover:bg-black">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ✅ Restaurant Banner -->
+  <section class="relative mt-16">
+    <img id="bannerImage" class="w-full h-[300px] object-cover brightness-75">
+    <div class="absolute inset-0 flex flex-col justify-center items-center text-center text-white">
+      <h1 id="restaurantName" class="text-4xl font-bold"></h1>
+      <p id="restaurantDetails" class="mt-2 text-lg"></p>
+    </div>
+  </section>
+
+  <!-- ✅ Menu Section -->
+  <section class="container mx-auto px-6 py-12">
+    <h2 class="text-3xl font-bold mb-6">🍴 Menu</h2>
+    <div id="menuList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+  </section>
+
+  <!-- ✅ Sticky Cart -->
+  <div class="fixed bottom-4 right-4 bg-white shadow-xl p-4 rounded-lg w-80 max-h-[400px] overflow-auto">
+    <h3 class="font-bold text-lg">🛒 Your Cart</h3>
+    <div id="cartItems" class="mt-3 text-sm space-y-3"></div>
+    <p id="cartTotal" class="mt-3 font-bold text-gray-800"></p>
+    <a href="/myorders" class="mt-4 block text-center w-full bg-red-500 text-white py-2 rounded hover:bg-red-600">
+    ✅ Proceed to My Orders
+    </a>
+
+  </div>
+
+  <script>
+    const restaurantId = window.location.pathname.split("/").pop();
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let restaurantMap = {};
+    let restaurantImageMap = {};
+
+    async function loadRestaurantDetails() {
+      const restaurantsRes = await fetch("/restaurants/");
+      const restaurants = await restaurantsRes.json();
+
+      restaurants.forEach(r => {
+        restaurantMap[r.id] = r.name;
+        restaurantImageMap[r.id] = r.image_url;
+      });
+
+      const currentRestaurant = restaurants.find(r => r.id == restaurantId);
+      if (currentRestaurant) {
+        document.getElementById("bannerImage").src = currentRestaurant.image_url;
+        document.getElementById("restaurantName").innerText = currentRestaurant.name;
+        document.getElementById("restaurantDetails").innerText =
+          `⭐ ${currentRestaurant.rating.toFixed(1)} | ${currentRestaurant.category} | 📍 ${currentRestaurant.location} | 🕒 30-40 min`;
+      }
+
+      const menuRes = await fetch(`/restaurants/${restaurantId}/menu`);
+      const dishes = await menuRes.json();
+      renderMenu(dishes);
+    }
+
+    function renderMenu(dishes) {
+      const menuContainer = document.getElementById("menuList");
+      menuContainer.innerHTML = "";
+
+      if (dishes.length === 0) {
+        menuContainer.innerHTML = `<p class="text-gray-500">No dishes available yet.</p>`;
+        return;
+      }
+
+      dishes.forEach(dish => {
+        const dishCard = document.createElement("div");
+        dishCard.className = "bg-white rounded-xl shadow flex overflow-hidden hover:shadow-lg transition";
+        dishCard.innerHTML = `
+          <img src="${dish.image_url}" class="w-32 h-32 object-cover">
+          <div class="p-4 flex-1">
+            <h4 class="font-semibold text-lg">${dish.name}</h4>
+            <p class="text-gray-600">₹${dish.price.toFixed(2)}</p>
+            
+            <div class="flex items-center mt-3 space-x-2">
+              <button class="quantity-btn" onclick="updateQuantity('${dish.id}', -1)">➖</button>
+              <span id="qty_${dish.id}" class="min-w-[20px] text-center">0</span>
+              <button class="quantity-btn" onclick="updateQuantity('${dish.id}', 1)">➕</button>
+            </div>
+
+            <button id="addBtn_${dish.id}" class="mt-3 px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              onclick="addToCart(${dish.id}, '${dish.name}', ${dish.price}, '${restaurantId}')">
+              Add to Cart
+            </button>
+          </div>
+        `;
+        menuContainer.appendChild(dishCard);
+      });
+    }
+
+    function updateQuantity(dishId, change) {
+      const qtyElement = document.getElementById(`qty_${dishId}`);
+      let currentQty = parseInt(qtyElement.innerText);
+      currentQty = Math.max(0, currentQty + change);
+      qtyElement.innerText = currentQty;
+    }
+
+    function addToCart(dishId, dishName, dishPrice, restaurantId) {
+      const qtyElement = document.getElementById(`qty_${dishId}`);
+      const quantity = parseInt(qtyElement.innerText);
+      if (quantity === 0) {
+        alert("Please select quantity!");
+        return;
+      }
+
+      cart.push({
+        restaurant_id: restaurantId,
+        dish_id: dishId,
+        name: dishName,
+        price: dishPrice,
+        quantity: quantity
+      });
+
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCart();
+      alert(`✅ Added ${quantity} x ${dishName} to cart`);
+    }
+
+    function updateCart() {
+      const cartContainer = document.getElementById("cartItems");
+      cartContainer.innerHTML = "";
+      let total = 0;
+
+      const grouped = cart.reduce((acc, item) => {
+        if (!acc[item.restaurant_id]) acc[item.restaurant_id] = [];
+        acc[item.restaurant_id].push(item);
+        return acc;
+      }, {});
+
+      for (const rId in grouped) {
+        const restaurantItems = grouped[rId];
+        const restaurantName = restaurantMap[rId] || `Restaurant ${rId}`;
+        const restaurantImage = restaurantImageMap[rId] || "/static/images/default_restaurant.jpg";
+
+        cartContainer.innerHTML += `
+          <div class="flex items-center space-x-2 mt-3">
+            <img src="${restaurantImage}" class="w-6 h-6 rounded-full">
+            <span class="font-semibold text-red-500">${restaurantName}</span>
+          </div>
+        `;
+
+        restaurantItems.forEach((item, index) => {
+          const itemTotal = item.price * item.quantity;
+          total += itemTotal;
+
+          cartContainer.innerHTML += `
+            <div class="flex justify-between items-center text-sm ml-6">
+              <span>${item.quantity} × ${item.name}</span>
+              <div class="flex items-center space-x-2">
+                <span>₹${itemTotal.toFixed(2)}</span>
+                <button onclick="removeFromCart(${index}, '${rId}')"
+                  class="text-red-500 hover:text-red-700 text-xs">❌</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      document.getElementById("cartTotal").innerText = `Total: ₹${total.toFixed(2)}`;
+    }
+
+    function removeFromCart(itemIndex, restaurantId) {
+      const grouped = cart.filter(c => c.restaurant_id == restaurantId);
+      const targetItem = grouped[itemIndex];
+
+      const idx = cart.findIndex(c =>
+        c.restaurant_id == targetItem.restaurant_id &&
+        c.dish_id == targetItem.dish_id
+      );
+      if (idx !== -1) cart.splice(idx, 1);
+
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCart();
+    }
+
+    async function placeOrder() {
+      const userId = localStorage.getItem("user_id");
+      if (!userId) {
+        alert("⚠️ Please login to place an order!");
+        window.location.href = "/login";
+        return;
+      }
+
+      if (cart.length === 0) {
+        alert("Your cart is empty!");
+        return;
+      }
+
+      const grouped = cart.reduce((acc, item) => {
+        if (!acc[item.restaurant_id]) acc[item.restaurant_id] = [];
+        acc[item.restaurant_id].push(item);
+        return acc;
+      }, {});
+
+      for (const rId in grouped) {
+        const restaurantItems = grouped[rId];
+        const totalAmount = restaurantItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+        const response = await fetch("/orders/place", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: parseInt(userId),
+            restaurant_id: parseInt(rId),
+            total_amount: totalAmount
+          })
+        });
+
+        const data = await response.json();
+        console.log(`✅ Order placed for ${restaurantMap[rId] || 'Restaurant'}:`, data.message);
+      }
+
+      alert("✅ All orders placed successfully!");
+      localStorage.removeItem("cart");
+      cart = [];
+      updateCart();
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "/";
+    }
+
+    loadRestaurantDetails();
+    updateCart();
+  </script>
+</body>
+</html>

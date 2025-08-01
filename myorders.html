@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Orders - DineDash</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: #f9fafb; }
+    .btn-primary {
+      background: linear-gradient(45deg, #ff4b2b, #ff416c);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover { background: linear-gradient(45deg, #ff416c, #ff4b2b); }
+    #map { height: 300px; border-radius: 10px; }
+  </style>
+</head>
+<body class="text-gray-800">
+
+<header class="bg-white shadow-md py-4 mb-6">
+  <div class="container mx-auto px-6 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-red-500 cursor-pointer" onclick="window.location.href='/'">🍽 DineDash</h1>
+    <a href="/" class="hover:text-red-500">🏠 Back to Home</a>
+  </div>
+</header>
+
+<section class="container mx-auto px-6 py-8">
+  <h2 class="text-3xl font-bold text-center mb-6">🛒 Your Cart</h2>
+  <div id="cartItems" class="bg-white shadow-lg rounded-lg p-6 mb-6"></div>
+  <div class="flex justify-between items-center bg-gray-100 p-4 rounded-lg shadow">
+    <h3 class="text-xl font-bold">Total: <span id="cartTotal">₹0</span></h3>
+    <button onclick="openAddressForm()" class="btn-primary">Confirm Delivery Address</button>
+  </div>
+</section>
+
+<div id="addressPopup" class="hidden fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+  <div class="bg-white p-6 rounded-xl w-[90%] md:w-[400px] shadow-xl">
+    <h3 class="text-xl font-bold mb-4">🏠 Enter Delivery Details</h3>
+    <label class="block mb-2 text-sm font-medium">Full Name</label>
+    <input type="text" id="customerName" class="w-full border rounded-lg p-2 mb-3" placeholder="Your name">
+    <label class="block mb-2 text-sm font-medium">Delivery Address</label>
+    <textarea id="customerAddress" class="w-full border rounded-lg p-2 mb-3" rows="3" placeholder="Street, Area, Locality"></textarea>
+    <label class="block mb-2 text-sm font-medium">Phone Number</label>
+    <input type="text" id="customerPhone" class="w-full border rounded-lg p-2 mb-3" placeholder="+91 XXXXX XXXXX">
+    <div class="flex justify-between mt-4">
+      <button onclick="closeAddressForm()" class="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400">Cancel</button>
+      <button onclick="confirmOrder()" class="btn-primary">Place Order</button>
+    </div>
+  </div>
+</div>
+
+<div id="orderSuccessPopup" class="hidden fixed bottom-6 right-6 bg-green-100 border border-green-400 shadow-xl p-4 rounded-lg">
+  ✅ Order <b id="orderId"></b> placed! Estimated delivery in <b id="estimatedTime"></b> mins.
+  <button onclick="showTracking()" class="ml-3 text-blue-600 underline">Track Order</button>
+</div>
+
+<section id="trackingSection" class="hidden container mx-auto px-6 py-6">
+  <h2 class="text-2xl font-bold mb-3">🚴 Live Delivery Tracking</h2>
+  <div id="map"></div>
+</section>
+
+<section class="container mx-auto px-6 py-8">
+  <h2 class="text-2xl font-bold mb-4">📜 Order History</h2>
+  <div id="orderHistoryContainer" class="bg-white rounded-lg shadow p-4 space-y-4"></div>
+</section>
+
+<script>
+  const routeCoordinates = [
+    { lat: 19.0760, lng: 72.8777 },
+    { lat: 19.0795, lng: 72.8789 },
+    { lat: 19.0820, lng: 72.8801 },
+    { lat: 19.0850, lng: 72.8820 },
+    { lat: 19.0870, lng: 72.8840 },
+    { lat: 19.0910, lng: 72.8865 },
+    { lat: 19.0940, lng: 72.8890 },
+    { lat: 19.0990, lng: 72.8947 }
+  ];
+
+  async function getPlaceName(lat, lng) {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const data = await res.json();
+      return data.display_name || "";
+    } catch {
+      return "";
+    }
+  }
+
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let confirmedAddress = null;
+
+  const cartItemsContainer = document.getElementById("cartItems");
+  const cartTotalEl = document.getElementById("cartTotal");
+
+  function loadCart() {
+    cartItemsContainer.innerHTML = "";
+    let total = 0;
+    if (cart.length === 0) {
+      cartItemsContainer.innerHTML = "<p class='text-center text-gray-500'>Your cart is empty.</p>";
+    } else {
+      cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        cartItemsContainer.innerHTML += `
+          <div class="flex items-center justify-between border-b py-3">
+            <div class="flex items-center space-x-3">
+              <img src="${item.img || '/static/images/default_dish.jpg'}" class="w-12 h-12 rounded object-cover">
+              <div>
+                <h4 class="font-semibold">${item.name}</h4>
+                <p class="text-gray-500 text-sm">${item.quantity} × ₹${item.price}</p>
+              </div>
+            </div>
+            <span class="font-medium">₹${itemTotal}</span>
+          </div>`;
+      });
+    }
+    cartTotalEl.innerText = `₹${total}`;
+  }
+
+  function openAddressForm() {
+    if (cart.length === 0) return alert("Your cart is empty!");
+    document.getElementById("addressPopup").classList.remove("hidden");
+  }
+
+  function closeAddressForm() {
+    document.getElementById("addressPopup").classList.add("hidden");
+  }
+
+  function confirmOrder() {
+    const name = document.getElementById("customerName").value.trim();
+    const address = document.getElementById("customerAddress").value.trim();
+    const phone = document.getElementById("customerPhone").value.trim();
+    if (!name || !address || !phone) return alert("Please fill all delivery details.");
+
+    confirmedAddress = { name, address, phone };
+    const orderId = "DD" + Math.floor(100000 + Math.random() * 900000);
+    const deliveryTime = Math.floor(Math.random() * 20) + 30;
+
+    let orderHistory = JSON.parse(localStorage.getItem("orderHistory")) || [];
+    orderHistory.push({
+      orderId,
+      items: cart,
+      total: cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
+      address: confirmedAddress,
+      placedAt: new Date().toLocaleString()
+    });
+    localStorage.setItem("orderHistory", JSON.stringify(orderHistory));
+
+    document.getElementById("orderId").innerText = orderId;
+    document.getElementById("estimatedTime").innerText = deliveryTime;
+    document.getElementById("orderSuccessPopup").classList.remove("hidden");
+    localStorage.removeItem("cart");
+    cart = [];
+    loadCart();
+    loadOrderHistory();
+    closeAddressForm();
+  }
+
+  function loadOrderHistory() {
+    const historyContainer = document.getElementById("orderHistoryContainer");
+    const orderHistory = JSON.parse(localStorage.getItem("orderHistory")) || [];
+    historyContainer.innerHTML = orderHistory.length === 0
+      ? "<p class='text-gray-500'>No past orders yet.</p>"
+      : orderHistory.map(order => `
+        <div class="border-b pb-3">
+          <h4 class="font-bold text-red-500">Order #${order.orderId}</h4>
+          <p class="text-sm text-gray-600">Placed at: ${order.placedAt}</p>
+          <p class="text-sm text-gray-600">Delivery to: ${order.address.address}</p>
+          <p class="mt-2 font-medium">Items:</p>
+          ${order.items.map(i => `<p class="text-sm ml-4">• ${i.quantity} × ${i.name} (₹${i.price})</p>`).join("")}
+          <p class="font-bold mt-2">Total: ₹${order.total}</p>
+        </div>`).join("");
+  }
+
+  let map, riderMarker;
+  async function showTracking() {
+    document.getElementById("trackingSection").classList.remove("hidden");
+    map = L.map("map").setView([routeCoordinates[0].lat, routeCoordinates[0].lng], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+    L.polyline(routeCoordinates.map(p => [p.lat, p.lng]), { color: "red", weight: 4 }).addTo(map);
+    L.marker([routeCoordinates[0].lat, routeCoordinates[0].lng]).bindTooltip("start", { permanent: true }).addTo(map);
+    L.marker([routeCoordinates[routeCoordinates.length - 1].lat, routeCoordinates[routeCoordinates.length - 1].lng])
+      .bindTooltip("Destination", { permanent: true }).addTo(map);
+
+    riderMarker = L.marker([routeCoordinates[0].lat, routeCoordinates[0].lng])
+      .addTo(map).openPopup();
+
+    let step = 0;
+    async function moveRider() {
+      if (step >= routeCoordinates.length) {
+        riderMarker.bindPopup("Your order has been successfully Delivered!✅ ").openPopup();
+        return;
+      }
+      const pos = routeCoordinates[step];
+      riderMarker.setLatLng([pos.lat, pos.lng]);
+      map.panTo([pos.lat, pos.lng]);
+
+      const locationName = await getPlaceName(pos.lat, pos.lng);
+      if (locationName) riderMarker.bindTooltip(locationName).openTooltip();
+
+      step++;
+      setTimeout(moveRider, 6000);
+    }
+    moveRider();
+  }
+
+  window.onload = () => {
+    loadCart();
+    loadOrderHistory();
+  };
+</script>
+</body>
+</html>

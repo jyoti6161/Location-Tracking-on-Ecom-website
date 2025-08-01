@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel - DineDash</title>
+
+  <!-- ✅ Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- ✅ Stylish Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+
+  <!-- ✅ Global Styles -->
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: #f9fafb; }
+    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+    .hover-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .hover-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    .btn-primary {
+      background: linear-gradient(45deg, #ff4b2b, #ff416c);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: background 0.3s ease;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(45deg, #ff416c, #ff4b2b);
+    }
+  </style>
+</head>
+<body class="text-gray-800">
+
+  <!-- ✅ Navbar -->
+  <nav class="bg-white shadow fixed w-full z-50">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-red-500 cursor-pointer" onclick="window.location.href='/'">
+        🍽 DineDash Admin
+      </h1>
+      <div class="flex items-center space-x-6">
+        <button onclick="logout()" class="btn-primary">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ✅ Admin Dashboard -->
+  <section class="container mx-auto px-6 pt-24 pb-12">
+    <h2 class="text-4xl font-bold text-center mb-8">📊 Admin Dashboard</h2>
+
+    <!-- ✅ Add Restaurant Section -->
+    <div class="bg-white p-6 rounded-xl shadow hover-card mb-10">
+      <h3 class="text-2xl font-semibold mb-4">➕ Add New Restaurant</h3>
+      <form id="restaurantForm" enctype="multipart/form-data" class="grid gap-4 md:grid-cols-2">
+        <input type="text" placeholder="Restaurant Name" id="resName" class="p-3 border rounded">
+        <input type="text" placeholder="Location" id="resLocation" class="p-3 border rounded">
+        <input type="text" placeholder="Category (Indian, Italian, Chinese)" id="resCategory" class="p-3 border rounded">
+        
+        <!-- ✅ File Upload -->
+        <input type="file" id="resImageFile" accept="image/*" class="p-3 border rounded">
+        
+        <button type="button" onclick="addRestaurant()" class="btn-primary md:col-span-2">Add Restaurant</button>
+      </form>
+    </div>
+
+    <!-- ✅ Restaurant Management -->
+    <h3 class="text-3xl font-bold mb-4">🏢 Manage Restaurants</h3>
+    <div id="restaurantList" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </section>
+
+  <script>
+    async function uploadImage(file) {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch("/upload_image", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.image_url) return data.image_url;
+      alert("Image upload failed!");
+      return null;
+    }
+
+    async function addRestaurant() {
+      const name = document.getElementById("resName").value.trim();
+      const location = document.getElementById("resLocation").value.trim();
+      const category = document.getElementById("resCategory").value.trim();
+      const imageFile = document.getElementById("resImageFile").files[0];
+
+      if (!name || !location || !category || !imageFile) {
+        alert("⚠️ Please fill all fields!");
+        return;
+      }
+
+      const uploadedImageUrl = await uploadImage(imageFile);
+      if (!uploadedImageUrl) return;
+
+      const response = await fetch("/restaurants/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          location,
+          category,
+          image_url: uploadedImageUrl
+        })
+      });
+
+      const data = await response.json();
+      alert(data.message);
+      loadRestaurants();
+    }
+
+    async function loadRestaurants() {
+      const res = await fetch("/restaurants/");
+      const restaurants = await res.json();
+      const list = document.getElementById("restaurantList");
+      list.innerHTML = "";
+
+      restaurants.forEach(r => {
+        list.innerHTML += `
+          <div class="hover-card bg-white rounded-xl shadow p-4 flex flex-col">
+            <img src="${r.image_url}" class="w-full h-40 object-cover rounded">
+            <h4 class="text-xl font-semibold mt-3">${r.name}</h4>
+            <p class="text-gray-600">${r.category} • ⭐ ${r.rating.toFixed(1)}</p>
+            <p class="text-gray-500 text-sm">${r.location}</p>
+            <div class="flex space-x-2 mt-3">
+              <button class="btn-primary flex-1" onclick="manageMenu(${r.id})">Manage Menu</button>
+              <button class="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600" onclick="deleteRestaurant(${r.id})">Delete</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    async function deleteRestaurant(id) {
+      if (!confirm("⚠️ Are you sure you want to delete this restaurant?")) return;
+
+      const response = await fetch(`/restaurants/delete/${id}`, { method: "DELETE" });
+      const data = await response.json();
+      alert(data.message);
+      loadRestaurants();
+    }
+
+    function manageMenu(restaurantId) {
+      window.location.href = `/admin/manage_menu/${restaurantId}`;
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "/";
+    }
+
+    loadRestaurants();
+  </script>
+</body>
+</html>
